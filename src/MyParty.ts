@@ -17,7 +17,7 @@ export class MyParty
             {
                 if( player !== character.name )
                 {
-                    game_log( "party " + parent.party[player] );
+                    //game_log( "party " + parent.party[player] );
                     if( parent.party[player] === undefined ) 
                     { 
                         send_party_invite(player) 

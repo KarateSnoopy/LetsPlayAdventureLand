@@ -53,9 +53,15 @@ export abstract class CharController
     public character: Character = null;
     public myxp:xptimer.XPTimer = new xptimer.XPTimer();
     public myparty:MyParty = new MyParty();
+    public attack_mode: boolean = true;
 
     abstract ClassName: string;
     abstract runClassLoop(): void;
+
+    public toggle_attack_mode() : void
+    {
+        this.attack_mode = !this.attack_mode;
+    }
 
     protected start_anti_stuck_check() :void
     {
@@ -82,8 +88,23 @@ export abstract class CharController
         },5000);
     }
 
+    public commonInit() : void
+    {
+        map_key("0", "snippet", "");
+        map_key("1", "snippet", "parent.start_runner();");
+        map_key("2", "snippet", "parent.stop_runner();");
+        map_key("3", "snippet", 'load_code("' + character.ctype + '")');
+        map_key("9", "snippet", 'send_cm("' + character.name + '","toggle_attack_mode");');
+        map_key("M", "snippet", 'game_log("X=" + character.real_x + ", Y=" + character.real_y);');
+        //map_key("4", "snippet", 'game_log(getCharInst().testIt())');
+        game_log("Hello world 5. To reload your code, first press 2 to stop the current AI, and then press 3 to reload the code.");
+        game_log("character.ctype: " + character.ctype);
+    }
+    
     protected constructor() 
     {
+        this.commonInit();
+        
         this.last_potion = 0;
         this.character = character;
         this.targetMob = "goo";

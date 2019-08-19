@@ -5,13 +5,13 @@ class Ranger extends CharController
 {
     ClassName: string = "Ranger";
 
-    LastCast_Supershot: Date = new Date();
-
-    constructor() {
+    constructor() 
+    {
         super()
         game_log(`Injected CharController: ${this.ClassName}`)
-        common.commonInit();
     }
+
+    // LastCast_Supershot: Date = new Date();
 
     // private castSupershot(): void {
     //     if ( this.Target !== null && this.Target.hp > this.character.attack * 1.5 &&
@@ -30,9 +30,10 @@ class Ranger extends CharController
 
     runClassLoop(): void 
     {
-        if ( common.attack_mode ) 
+        if ( this.attack_mode )
         {
-            game_log("loop attack");
+            //game_log("ranger loop attack");
+
             // FOCUS_TANK_TARGET ? this.targetTankEntity() : this.targetLocalEntity();
             // this.moveToTarget();
             // this.castThreeShot();
