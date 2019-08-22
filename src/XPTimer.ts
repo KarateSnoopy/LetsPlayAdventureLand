@@ -5,7 +5,8 @@ export class XPTimer
     private last_xp_checked_minutes: number = character.xp;
     private last_xp_checked_kill: number = character.xp;
 
-    public constructor() {
+    public constructor() 
+    {
         this.init_xptimer(1);
     }
 

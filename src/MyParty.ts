@@ -1,6 +1,6 @@
 import { charInst } from "./Common";
 
-export const MY_PARTY_NAMES: Array<string> = 
+export const MyPartyNames: Array<string> = 
 [
     "MageSnoopy", // DPS - Mage
     "RangerSnoopy", // DPS - Archer
@@ -11,9 +11,9 @@ export class MyParty
 {
     public static inviteMembers() 
     {
-        if( this.isLeader() )
+        if( this.amItheLeader() )
         {
-            MY_PARTY_NAMES.forEach((player: string, key: string) => 
+            MyPartyNames.forEach((player: string, key: string) => 
             {
                 if( player !== character.name )
                 {
@@ -27,12 +27,12 @@ export class MyParty
         }
     }
 
-    public static getLeaderName():string { return MY_PARTY_NAMES[1]; }
-    public static getMage() { return get_player(MY_PARTY_NAMES[0]) }
-    public static getRanger() { return get_player(MY_PARTY_NAMES[1]) }
-    public static getHealer() { return get_player(MY_PARTY_NAMES[2]) }
+    public static getLeaderName():string { return MyPartyNames[1]; }
+    public static getMage() { return get_player(MyPartyNames[0]) }
+    public static getRanger() { return get_player(MyPartyNames[1]) }
+    public static getHealer() { return get_player(MyPartyNames[2]) }
 
-    public static isLeader() : boolean 
+    public static amItheLeader() : boolean 
     {
         return character.name == MyParty.getLeaderName();
     }

@@ -34,12 +34,22 @@ class Mage extends CharController
             // this.moveToTarget()
             // this.attackTarget()
 
-            // if ( MyParty.getRanger() !== null ) {
+            // if ( MyParty.getRanger() !== null ) 
+            // {
             //     this.castEnergize( MyParty.getRanger() )
             //     move(MyParty.getRanger().real_x, MyParty.getRanger().real_y)
             // }
+
+            if (this.moveToTarget())
+            {
+                var target = get_targeted_monster();
+                if (target && can_attack(target))
+                {
+                    attack(target);
+                }
+            }
         }
-    }
+    } 
 }
 
 common.setCharInst(new Mage());

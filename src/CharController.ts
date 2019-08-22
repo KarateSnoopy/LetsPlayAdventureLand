@@ -1,12 +1,33 @@
 import * as xptimer from "XPTimer";
-import * as myparty from "MyParty";
 import { MyParty } from "./MyParty";
+import { MyPartyNames } from "./MyParty";
 
 interface MobLocation
 {
     map: string
     x: number
     y: number
+}
+
+interface PartyLocation
+{
+    x:number
+    y:number
+}
+
+class PartyPositions
+{
+    public AddPos(name:string, data:PartyLocation)
+    {
+        this[name] = data;
+    }
+
+    protected constructor() 
+    {
+        this.AddPos(MyPartyNames[1], {x: 0, y: 0 });
+        this.AddPos(MyPartyNames[0], {x: 25, y: -25 });
+        this.AddPos(MyPartyNames[2], {x: -25, y: -25 });
+    }
 }
 
 class Monsters 
@@ -52,8 +73,9 @@ export abstract class CharController
     public isResupplying: boolean = false;
     public character: Character = null;
     public myxp:xptimer.XPTimer = new xptimer.XPTimer();
-    public myparty:MyParty = new MyParty();
+    public MyParty = new MyParty();
     public attack_mode: boolean = true;
+    public PartyPositions: PartyPositions = new PartyPositions();
 
     abstract ClassName: string;
     abstract runClassLoop(): void;
@@ -68,12 +90,12 @@ export abstract class CharController
         //Anti-Stuck Script
         this.last_x = character.real_x;
         this.last_y = character.real_y;
-        setInterval(function(){
-            if(
-                this.last_x-10 < character.real_x && 
+        setInterval(function()
+        {
+            if( this.last_x-10 < character.real_x && 
                 this.last_x+10 > character.real_x && 
                 this.last_y-10 < character.real_y && 
-                this.last_y+10 > character.real_y)
+                this.last_y+10 > character.real_y )
             {
                 game_log("Stuck.  Warping to town");
                 parent.socket.emit('town');
@@ -85,7 +107,7 @@ export abstract class CharController
                 this.last_x = character.real_x;
                 this.last_y = character.real_y;
             }
-        },5000);
+        }, 5000);
     }
 
     public commonInit() : void
@@ -107,7 +129,7 @@ export abstract class CharController
         
         this.last_potion = 0;
         this.character = character;
-        this.targetMob = "goo";
+        this.targetMob = "bee";
         MyParty.inviteMembers();
         
         //this.start_anti_stuck_check();
@@ -115,31 +137,82 @@ export abstract class CharController
         {
             this.character = character;
 
-            if(is_moving(this.character)) 
+            if (is_moving(this.character))
             {
                 return;
             }
 
-            if(this.character.rip) 
+            if (this.character.rip)
             {
                 respawn();
                 return;
             }
 
-            this.use_potions();
+            use_hp_or_mp();
             loot(true);
-
             // this.checkSupplies();
 
-            if ( !this.isResupplying && !this.isMovingToLocation ) 
+            let leader = get_player(character.party);
+            if (leader && leader.name !== this.character.name)
             {
-                this.Target = get_targeted_monster();
+                //game_log("Not leader");
+                let partyPos = this.PartyPositions[this.character.name];
 
-                if ( this.Target !== null && this.Target.mtype !== this.TargetName )
-                    this.TargetName = this.Target.mtype;
+                let partySpotX = leader.real_x + partyPos.x;
+                let partySpotY = leader.real_y + partyPos.y;
+                let distToPartySpot = distanceToCoords(partySpotX, partySpotY, this.character);
+                if( distToPartySpot > 100 )
+                {
+                    // Smart move to party spot if far from it
+                    smart_move({ x: partySpotX, y: partySpotY })
+                }
+                else if( distToPartySpot > 50 )
+                {
+                    // Regular move if closer
+                    move(partySpotX, partySpotY);
+                }
+                else
+                {
+                    // Target of leader
+                    let target = get_target_of(leader);
+                    if(target)
+                    {
+                        // Attack the target if the target isn't empty and attackable
+                        if(!in_attack_range(target))
+                        {
+                            // Walk half the distance
+                            move(
+                                character.real_x+(target.real_x-character.real_x)/2, 
+                                character.real_y+(target.real_y-character.real_y)/2
+                                );
+                        }
 
-                this.moveToFarmLocation();
-                this.runClassLoop();
+                        if (can_attack(target))
+                        {
+                            attack(target);
+                        }
+                    }
+
+                    // Move to leader (to limit calls only move when not moving already)
+                    if (!this.character.moving)
+                    {
+                        move(partySpotX, partySpotY);
+                    }
+                }
+            }
+            else
+            {
+                if (!this.isResupplying && !this.isMovingToLocation)
+                {
+                    this.Target = get_targeted_monster();
+                    if (this.Target !== null && this.Target.mtype !== this.TargetName)
+                    {
+                        this.TargetName = this.Target.mtype;
+                    }
+
+                    this.moveToFarmLocation();
+                    this.runClassLoop();
+                }
             }
 
             this.myxp.update_xptimer();
@@ -154,16 +227,57 @@ export abstract class CharController
         //game_log("dist " + dist);
         if (target !== null && 
             target !== undefined && 
-            distanceToCoords(target.x, target.y, this.character) > 50 ) 
+            distanceToCoords(target.x, target.y, this.character) > 200 ) 
         {
             game_log("moving to " + this.targetMob + " at " + target.x + ", " + target.y);
             this.isMovingToLocation = true;
             smart_move({ map: target.map, x: target.x, y: target.y })
+            change_target(null);
+            this.isMovingToLocation = false;
         }
         else 
         {
             this.isMovingToLocation = false
         }
+    }
+
+    public moveToTarget(): boolean
+    {
+        var target=get_targeted_monster();
+        if(!target)
+        {
+            target = get_nearest_monster({min_xp:100,max_att:120,path_check:true,no_target:true});
+            if( distanceToCoords(target.real_x, target.real_y, this.character) < 200 )
+            {
+                // Ensures that your character can walk to the target (path_check) and the target isn't engaging with anyone else (no_target)
+                if(target) 
+                {
+                    change_target(target);
+                }
+                else
+                {
+                    // No monsters
+                    return false;
+                }
+            }
+            else
+            {
+                // Too far
+                return false;
+            }
+        }
+
+        if(!in_attack_range(target))
+        {
+            // Walk half the distance
+            move(
+                character.real_x+(target.real_x-character.real_x)/2,
+                character.real_y+(target.real_y-character.real_y)/2
+                );
+            return false;
+        }
+
+        return true;
     }
 
     public use_potions(): void 

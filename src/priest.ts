@@ -23,7 +23,7 @@ class Priest extends CharController
     //     this.HealTarget = null
     //     this.HealWeight = null
 
-    //     MY_PARTY_NAMES.map( playerName => {
+    //     MyPartyNames.map( playerName => {
     //         let player = get_player(playerName);
 
     //         if (player !== null && can_heal(player) &&
@@ -65,6 +65,15 @@ class Priest extends CharController
 
             // this.curseTarget()
             //this.attackTarget();
+
+            if (this.moveToTarget())
+            {
+                var target = get_targeted_monster();
+                if (target && can_attack(target))
+                {
+                    attack(target);
+                }
+            }
         }
     }
 }

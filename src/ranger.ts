@@ -39,6 +39,15 @@ class Ranger extends CharController
             // this.castThreeShot();
             // this.castSupershot(); /* Disabled for now */
             // this.attackTarget();
+
+            if (this.moveToTarget())
+            {
+                var target = get_targeted_monster();
+                if (target && can_attack(target))
+                {
+                    attack(target);
+                }
+            }
         }
     }
 }
