@@ -1,5 +1,6 @@
 import {CharController} from "CharController";
 import * as common from "Common";
+import { MyPartyNames } from "./MyParty";
 
 class Priest extends CharController 
 {
@@ -9,38 +10,42 @@ class Priest extends CharController
     {
         super()
         game_log(`Injected CharController: ${this.ClassName}`)
+        //map_key("s", "snippet", 'var target = get_targeted_monster(); if( target ) { use_skill("curse", target); }');
     }
 
-    // readonly minHealPercentage = 0.80
     // readonly curseTargetMaxHealth = 1000
-    // HealTarget: Player = null;
-    // HealWeight: number = null;
     // LastCast_Curse: Date = new Date();
+    // HealTarget: Player = null;
+    //HealWeight: number = null;
 
-    // private healPartyMember(): boolean 
-    //{
+    readonly minHealPercentage = 0.8
 
-    //     this.HealTarget = null
-    //     this.HealWeight = null
+    private healPartyMember(): boolean 
+    {
+        this.HealTarget = null;
 
-    //     MyPartyNames.map( playerName => {
-    //         let player = get_player(playerName);
+        MyPartyNames.map( playerName => 
+        {
+            let player = get_player(playerName);
 
-    //         if (player !== null && can_heal(player) &&
-    //             player.hp < player.max_hp * this.minHealPercentage &&
-    //             this.HealTarget === null ) {
-    //             this.HealTarget = player
-    //         }
-    //     })
+            if (player !== null && 
+                can_heal(player) &&
+                player.hp < player.max_hp * this.minHealPercentage &&
+                this.HealTarget === null ) 
+            {
+                this.HealTarget = player
+            }
+        })
 
-    //     if ( this.HealTarget !== null && can_heal(this.HealTarget) ) {
-    //         game_log(`Healing: ${this.HealTarget.name}`)
-    //         heal(this.HealTarget);
-    //         return true
-    //     }
+        if ( this.HealTarget !== null && can_heal(this.HealTarget) ) 
+        {
+            game_log(`Healing: ${this.HealTarget.name}`)
+            heal(this.HealTarget);
+            return true;
+        }
 
-    //     return false
-    // }
+        return false;
+    }
 
     // // @ts-ignore
     // private curseTarget(): void {
@@ -52,25 +57,36 @@ class Priest extends CharController
     //     }
     // }
 
-    runClassLoop(): void 
+    runClassLoop(target): void 
     {
-        //if ( this.healPartyMember() ) return
+        if ( this.healPartyMember() ) 
+        {
+            return;
+        }
 
         if ( this.attack_mode )
         {
-            //game_log("Priest loop attack");
-
             //FOCUS_TANK_TARGET ? this.targetTankEntity() : this.targetLocalEntity();
             //this.moveToTarget();
 
             // this.curseTarget()
             //this.attackTarget();
 
-            if (this.moveToTarget())
+            if(target)
             {
-                var target = get_targeted_monster();
-                if (target && can_attack(target))
+                // Attack the target if the target isn't empty and attackable
+                if(!in_attack_range(target))
                 {
+                    // Walk half the distance
+                    move(
+                        character.real_x+(target.real_x-character.real_x)/2, 
+                        character.real_y+(target.real_y-character.real_y)/2
+                        );
+                }
+
+                if (can_attack(target))
+                {
+                    game_log("Main attacking " + target.name);
                     attack(target);
                 }
             }

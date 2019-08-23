@@ -2,8 +2,8 @@ import { charInst } from "./Common";
 
 export const MyPartyNames: Array<string> = 
 [
-    "MageSnoopy", // DPS - Mage
     "RangerSnoopy", // DPS - Archer
+    "MageSnoopy", // DPS - Mage
     "PriestSnoopy", // Healer - Priest
 ]
 
@@ -27,10 +27,10 @@ export class MyParty
         }
     }
 
-    public static getLeaderName():string { return MyPartyNames[1]; }
-    public static getMage() { return get_player(MyPartyNames[0]) }
-    public static getRanger() { return get_player(MyPartyNames[1]) }
-    public static getHealer() { return get_player(MyPartyNames[2]) }
+    public static getLeaderName():string { return MyPartyNames[0]; }
+    public static getMage() { return get_player(MyPartyNames[1]); }
+    public static getRanger() { return get_player(MyPartyNames[0]); }
+    public static getHealer() { return get_player(MyPartyNames[2]); }
 
     public static amItheLeader() : boolean 
     {

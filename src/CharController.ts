@@ -24,8 +24,8 @@ class PartyPositions
 
     protected constructor() 
     {
-        this.AddPos(MyPartyNames[1], {x: 0, y: 0 });
-        this.AddPos(MyPartyNames[0], {x: 25, y: -25 });
+        this.AddPos(MyPartyNames[0], {x: 0, y: 0 });
+        this.AddPos(MyPartyNames[1], {x: 25, y: -25 });
         this.AddPos(MyPartyNames[2], {x: -25, y: -25 });
     }
 }
@@ -41,6 +41,7 @@ class Monsters
     {
         this.AddMonster("goo", {map: "main", x: -12, y: 772 });
         this.AddMonster("bee", {map: "main", x: 554, y: 1070 });
+        this.AddMonster("hardbee", {map: "main", x: 673, y: 702 });
 
         // Squig
         // Armadillo
@@ -129,7 +130,7 @@ export abstract class CharController
         
         this.last_potion = 0;
         this.character = character;
-        this.targetMob = "bee";
+        this.targetMob = "hardbee";
         MyParty.inviteMembers();
         
         //this.start_anti_stuck_check();
@@ -152,10 +153,10 @@ export abstract class CharController
             loot(true);
             // this.checkSupplies();
 
-            let leader = get_player(character.party);
+            let leader = get_player(MyParty.getLeaderName());
             if (leader && leader.name !== this.character.name)
             {
-                //game_log("Not leader");
+                //game_log("Not leader. Leader = " + leader.name);
                 let partyPos = this.PartyPositions[this.character.name];
 
                 let partySpotX = leader.real_x + partyPos.x;
@@ -173,25 +174,11 @@ export abstract class CharController
                 }
                 else
                 {
+
                     // Target of leader
                     let target = get_target_of(leader);
-                    if(target)
-                    {
-                        // Attack the target if the target isn't empty and attackable
-                        if(!in_attack_range(target))
-                        {
-                            // Walk half the distance
-                            move(
-                                character.real_x+(target.real_x-character.real_x)/2, 
-                                character.real_y+(target.real_y-character.real_y)/2
-                                );
-                        }
-
-                        if (can_attack(target))
-                        {
-                            attack(target);
-                        }
-                    }
+                    this.runClassLoop(target);
+                    //let target = get_nearest_monster({min_xp:100,max_att:120,path_check:true,no_target:true});
 
                     // Move to leader (to limit calls only move when not moving already)
                     if (!this.character.moving)
@@ -204,14 +191,10 @@ export abstract class CharController
             {
                 if (!this.isResupplying && !this.isMovingToLocation)
                 {
-                    this.Target = get_targeted_monster();
-                    if (this.Target !== null && this.Target.mtype !== this.TargetName)
-                    {
-                        this.TargetName = this.Target.mtype;
-                    }
-
+                    this.targetNearestMonster();
                     this.moveToFarmLocation();
-                    this.runClassLoop();
+                    var target = get_targeted_monster();
+                    this.runClassLoop(target);
                 }
             }
 
@@ -241,7 +224,7 @@ export abstract class CharController
         }
     }
 
-    public moveToTarget(): boolean
+    public targetNearestMonster(): boolean
     {
         var target=get_targeted_monster();
         if(!target)
@@ -267,6 +250,11 @@ export abstract class CharController
             }
         }
 
+        return true;
+    }
+
+    public moveToTarget(target): boolean
+    {
         if(!in_attack_range(target))
         {
             // Walk half the distance

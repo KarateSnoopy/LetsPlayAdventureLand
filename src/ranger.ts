@@ -9,6 +9,7 @@ class Ranger extends CharController
     {
         super()
         game_log(`Injected CharController: ${this.ClassName}`)
+        map_key("s", "snippet", 'var target = get_targeted_monster(); if( target ) { use_skill("supershot", target); }');
     }
 
     // LastCast_Supershot: Date = new Date();
@@ -28,7 +29,7 @@ class Ranger extends CharController
     //     }
     // }
 
-    runClassLoop(): void 
+    runClassLoop(target): void 
     {
         if ( this.attack_mode )
         {
@@ -40,11 +41,11 @@ class Ranger extends CharController
             // this.castSupershot(); /* Disabled for now */
             // this.attackTarget();
 
-            if (this.moveToTarget())
+            if (this.moveToTarget(target))
             {
-                var target = get_targeted_monster();
                 if (target && can_attack(target))
                 {
+                    game_log("Main attacking " + target.name);
                     attack(target);
                 }
             }

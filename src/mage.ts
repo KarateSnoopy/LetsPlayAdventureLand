@@ -9,6 +9,8 @@ class Mage extends CharController
     {
         super()
         game_log(`Injected CharController: ${this.ClassName}`)
+        //map_key("s", "snippet", 'var target = get_targeted_monster(); if( target ) { use_skill("burst", target); }');
+        //map_key("b", "snippet", 'use_skill("blink",[5,5])');
     }
 
     // LastCast_Energize: Date = new Date();
@@ -24,12 +26,10 @@ class Mage extends CharController
     //     }
     // }
 
-    runClassLoop(): void 
+    runClassLoop(target): void 
     {
         if ( this.attack_mode )
         {
-            //game_log("Mage loop attack");
-
             // FOCUS_TANK_TARGET ? this.targetTankEntity() : this.targetLocalEntity()
             // this.moveToTarget()
             // this.attackTarget()
@@ -40,11 +40,21 @@ class Mage extends CharController
             //     move(MyParty.getRanger().real_x, MyParty.getRanger().real_y)
             // }
 
-            if (this.moveToTarget())
+            if(target)
             {
-                var target = get_targeted_monster();
-                if (target && can_attack(target))
+                // Attack the target if the target isn't empty and attackable
+                if(!in_attack_range(target))
                 {
+                    // Walk half the distance
+                    move(
+                        character.real_x+(target.real_x-character.real_x)/2, 
+                        character.real_y+(target.real_y-character.real_y)/2
+                        );
+                }
+
+                if (can_attack(target))
+                {
+                    game_log("Main attacking " + target.name);
                     attack(target);
                 }
             }
